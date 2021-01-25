@@ -1,0 +1,72 @@
+version: '3.5'
+
+networks:
+  mobilepush:
+
+services:
+  zookeeper:
+    image: zookeeper:3.6.2
+    container_name: zookeper-service
+    restart: always
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - mobilepush
+
+  kafka:
+    build:
+      context: ./kafka
+      dockerfile: Dockerfile
+    image: kenniston/kafka:latest
+    container_name: kafka-service
+    ports:
+      - 9092:9092
+      - 8082:8082
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: 192.168.1.111
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CREATE_TOPICS: "MobileSendPush:4:1,MobilePushResult:4:1"
+      EXTRA_ARGS: -javaagent:/usr/app/jmx_prometheus_javaagent.jar=8082:/usr/app/prom-jmx-agent-config.yml
+    networks:
+      - mobilepush
+    depends_on:
+      - zookeeper
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:3.27.0
+    container_name: kafdrop-service
+    ports:
+      - 19000:9000
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9092    
+    networks: 
+      - mobilepush
+    depends_on:
+      - kafka
+    
+  prometheus:
+    build:
+      context: ./prometheus
+      dockerfile: Dockerfile
+    image: kenniston/prometheus:latest
+    container_name: prometheus-service
+    ports:
+      - "9090:9090"
+    networks:
+      - mobilepush
+    depends_on:
+      - kafka
+
+  grafana:
+    image: grafana/grafana:7.3.7
+    container_name: grafana-service
+    ports:
+      - "3000:3000"
+    networks:
+      - mobilepush
+    depends_on:
+      - prometheus

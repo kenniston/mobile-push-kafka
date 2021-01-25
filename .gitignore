@@ -1,0 +1,21 @@
+# General
+.DS_Store
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+main.exe
+mobilepushsender
+
+# Test binary, build with `go test -c`
+*.test
+
+# IntelliJ project files
+.idea
+*.iml
+out
+gen
