@@ -70,3 +70,19 @@ services:
       - mobilepush
     depends_on:
       - prometheus
+
+  # golang-sender:
+  #   build:
+  #     context: ./golang
+  #     dockerfile: Dockerfile
+  #   image: golang-sender:latest
+  #   container_name: golang-sender-service
+  #   stdin_open: true
+  #   tty: true
+  #   ports:
+  #     - "6001:6001"
+  #   environment:
+  #     - SRV_LOG_LEVEL=debug
+  #   restart: on-failure:3
+  #   networks:
+  #     - mobilepush

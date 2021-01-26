@@ -1,38 +1,74 @@
-# Mobile Push with Kafka
+# **Mobile Push with Kafka**
 
 This document describes the steps needed to build and run the Mobile Push Sender using Kafka.
 
-*Updated: 24 Jan 2021*
+*Updated: 25 Jan 2021*
+
+<br/>
+
+## Architecture
+
+<br/>
+
+<p align="center">
+  <img src="images/architecture.png"  alt="Architecture"/>
+</p>
+
+<br/>
+
+## How to run the project
+
+<br/>
+
+All docker images can be created by docker-compose. To start all containers, use the ***docker-compose up*** command. This command will build all the necessary images and create the containers. 
+
+Below are the hosts and ports for the all containers (docker on localhost):
+
+* ZooKeeper - http://localhost:2181
+* Kakfa - http://localhost:9092
+* Kafdrop - http://localhost:19000
+* Prometheus - http://localhost:9090
+* Grafana - http://localhost:3000
+
+<br/>
 
 ## Developer Environment
 
 ### Tools
 
-* Go (1.15.7 - https://golang.org/dl/)
+* Docker (https://www.docker.com/products/docker-desktop)
+* Go (1.15.7 - https://golang.org/dl)
 * GoLand (Optional - https://www.jetbrains.com/go/download)
+* Intellij IDEA (Optional - https://www.jetbrains.com/pt-br/idea/download)
 * Visual Studio Code (Optional - https://code.visualstudio.com/Download)
   - Visual Studio Code Extensions for Go
     - Go for Visual Studio Code (Microsoft - https://github.com/Microsoft/vscode-go.git)
 
-### GoLang Sender
+<br/>
 
-#### How to build the *GoLang* Sender project
+# GoLang Projects
+
+***project-name = Procuder or Consumer***
+
+## How to build the *GoLang* project
 
 ```
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -a \
-    -o mobilepushsender \
+    -o project-name \
     -ldflags \
     "-s -w \
      -extldflags '-static' \
      -X github.com/kenniston/mobile-push-kafka/golang/cmd.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S%p') \
      -X github.com/kenniston/mobile-push-kafka/golang/cmd.GitCommit=$(git rev-parse HEAD) \
      -X github.com/kenniston/mobile-push-kafka/golang/cmd.Version='0.1'" main.go && \
-     upx --ultra-brute -v /home/app/build/mobilepushsender && \
-     upx -t /home/app/build/mobilepushsender
+     upx --ultra-brute -v /home/app/build/project-name && \
+     upx -t /home/app/build/project-name
 ```
 
-#### How to optimize Push Sender executable size
+<br/>
+
+## How to optimize the executable size
 
 * Install UPX (Ultimate Packer for eXecutables - Compress/expand executable files)
     - MacOS X and Homebrew:
@@ -51,14 +87,19 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 * Compress the server executable with UPX:
 
     ```
-    upx --ultra-brute -v ./mobilepushsender && upx -t ./mobilepushsender
+    upx --ultra-brute -v ./project-name && upx -t ./project-name
     ```    
     or
     ```
-    upx -9 -v ./mobilepushsender && upx -t ./mobilepushsender
+    upx -9 -v ./project-name && upx -t ./project-name
     ```    
 
-#### Build from Docker Container (GoLang Container)
+<br/>
+
+## Build from Docker Container (GoLang Container)
+
+The **docker-composer.yml** file has the build section for all GoLang project. This section uses the Dockerfile below to generate the project's executable and optimize it using the upx tool.
+
 ```
 FROM golang:1.15.7-alpine as builder
 
@@ -73,15 +114,15 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -a \
-    -o mobilepushsender \
+    -o project-name \
     -ldflags \
     "-s -w \
      -extldflags '-static' \
      -X github.com/kenniston/mobile-push-kafka/golang/cmd.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S%p') \
      -X github.com/kenniston/mobile-push-kafka/golang/cmd.GitCommit=$(git rev-parse HEAD) \
      -X github.com/kenniston/mobile-push-kafka/golang/cmd.Version='0.1'" main.go && \
-     upx --ultra-brute -v /home/app/build/mobilepushsender && \
-     upx -t /home/app/build/mobilepushsender
+     upx --ultra-brute -v /home/app/build/project-name && \
+     upx -t /home/app/build/project-name
 
 FROM scratch
 
@@ -90,135 +131,105 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
 
-COPY --from=builder /home/app/build/mobilepushsender /home/app/mobilepushsender
+COPY --from=builder /home/app/build/project-name /home/app/project-name
 
 USER app
 
-ENTRYPOINT ["/home/app/mobilepushsender", "run"]
+ENTRYPOINT ["/home/app/project-name", "run"]
 ```
 
-#### Sender Command Line
+<br/>
+
+## Project Command Line
+
+*The default port can change per project*
 
 ```
-    ./mobilepushsender run \
-        -p [PORT - Optional. Default 6001]
-        --log-level [Default: info - (debug, error, trace, info, warning, panic, fatal)]
+./project-name run \
+    -p [PORT - Optional. Default 6001]
+    --log-level [Default: info - (debug, error, trace, info, warning, panic, fatal)]
 ```
 
-### Java Sender
+<br/>
 
-#### How to build the *Java* Sender project
+# Java Projects
+
+## How to build the *Java* project
 
 *Not implemented yet*
 
-### Kafka Container
+<br/>
+
+# Kafka
 
 *Not implemented yet*
 
-### Prometheus Container
+<br/>
 
-*Not implemented yet*
+# Prometheus
 
+## Prometheus Container
+
+This project uses the official Prometheus container to build a new image. The new image has the config file used to link Prometheus with Kafka JXM port to receive the Kafka's metrics.
+
+Kafka uses the Prometheus JMX Agent (port 8082 in this project) to expose Prometheus metrics through his host.
+
+## Prometheus Architecture
 <p align="center">
   <img src="images/prometheus-architecture.svg"  alt="Prometheus Architecture"/>
   https://hub.docker.com/r/prom/prometheus
 </p>
 
-### Grafana Container
+<br/>
+
+# Grafana
+
+This project uses the official Grafana container. After run the project using the ***docker-compose up*** the Prometheus's Datasource must be configured.
+Uses the following url (docker on localhost) to configure the Prometheus Datasource:
+
+<br/>
+
+http://localhost:3000/datasources/new?utm_source=grafana_gettingstarted
+
+<br/>
+
+Select Prometheus in the Time series database section:
+
+<p align="center">
+  <img src="images/grafana-prometheus-datasource-step1.png"  alt="Grafana Setup Step 1"/>
+  Grafana Datasources
+</p>
+
+<br/>
+
+Fill in the fields as the image below: 
+
+<p align="center">
+  <img src="images/grafana-prometheus-datasource-step2.png"  alt="Grafana Setup Step 2"/>
+  Prometheus Datasource Info
+</p>
+
+<br/>
+
+Last but not least, set up the Kafka Dashboard in Grafana.
+Import the dashboard file from the kakfa folder (grafana-dashboard-kafka-metrics_rev4.json) using a URL below: 
+
+<br/>
+
+http://localhost:3000/dashboard/import
+
+<br/>
+
+
+<p align="center">
+  <img src="images/grafana-prometheus-datasource-step3.png"  alt="Grafana Setup Step 3"/>
+  Import the Kafka's Dashboard using the Upload JSON file button
+</p>
+
+<br/>
+
+# Graylog
 
 *Not implemented yet*
 
-## Docker Compose File
-
-```
-version: '3.5'
-
-networks:
-  mobilepush:
-
-services:
-  zookeeper:
-    image: zookeeper:3.6.2
-    container_name: zookeper-service
-    restart: always
-    ports:
-      - 2181:2181
-    environment:
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - mobilepush
-
-  kafka:
-    build:
-      context: ./kafka
-      dockerfile: Dockerfile
-    image: kenniston/kafka:latest
-    container_name: kafka-service
-    ports:
-      - 9092:9092
-      - 8082:8082
-    environment:
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_HOST_NAME: 192.168.1.111
-      KAFKA_LISTENERS: PLAINTEXT://:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_CREATE_TOPICS: "MobileSendPush:4:1,MobilePushResult:4:1"
-      EXTRA_ARGS: -javaagent:/usr/app/jmx_prometheus_javaagent.jar=8082:/usr/app/prom-jmx-agent-config.yml
-    networks:
-      - mobilepush
-    depends_on:
-      - zookeeper
-
-  kafdrop:
-    image: obsidiandynamics/kafdrop:3.27.0
-    container_name: kafdrop-service
-    ports:
-      - 19000:9000
-    environment:
-      KAFKA_BROKERCONNECT: kafka:9092    
-    networks: 
-      - mobilepush
-    depends_on:
-      - kafka
-    
-  prometheus:
-    build:
-      context: ./prometheus
-      dockerfile: Dockerfile
-    image: kenniston/prometheus:latest
-    container_name: prometheus-service
-    ports:
-      - "9090:9090"
-    networks:
-      - mobilepush
-    depends_on:
-      - kafka
-
-  grafana:
-    image: grafana/grafana:7.3.7
-    container_name: grafana-service
-    ports:
-      - "3000:3000"
-    networks:
-      - mobilepush
-    depends_on:
-      - prometheus
-
-  golang-sender:
-    build:
-      context: ./golang
-      dockerfile: Dockerfile
-    image: golang-sender:latest
-    container_name: golang-sender-service
-    stdin_open: true
-    tty: true
-    ports:
-      - "6001:6001"
-    environment:
-      - SRV_LOG_LEVEL=debug
-    restart: on-failure:3
-    networks:
-      - mobilepush
-```
-
-
+<br/>
