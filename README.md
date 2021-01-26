@@ -177,7 +177,7 @@ Kafka uses the Prometheus JMX Agent (port 8082 in this project) to expose Promet
 ## Prometheus Architecture
 <p align="center">
   <img src="images/prometheus-architecture.svg"  alt="Prometheus Architecture"/>
-  https://hub.docker.com/r/prom/prometheus
+  <p align="center">https://hub.docker.com/r/prom/prometheus</p>
 </p>
 
 <br/>
@@ -185,7 +185,7 @@ Kafka uses the Prometheus JMX Agent (port 8082 in this project) to expose Promet
 # Grafana
 
 This project uses the official Grafana container. After run the project using the ***docker-compose up*** the Prometheus's Datasource must be configured.
-Uses the following url (docker on localhost) to configure the Prometheus Datasource:
+Use the following URL (docker on localhost) to configure the Prometheus Datasource:
 
 <br/>
 
@@ -197,18 +197,20 @@ Select Prometheus in the Time series database section:
 
 <p align="center">
   <img src="images/grafana-prometheus-datasource-step1.png"  alt="Grafana Setup Step 1"/>
-  Grafana Datasources
+  <p align="center">Grafana Datasources</p>
 </p>
 
+<br/>
 <br/>
 
 Fill in the fields as the image below: 
 
 <p align="center">
   <img src="images/grafana-prometheus-datasource-step2.png"  alt="Grafana Setup Step 2"/>
-  Prometheus Datasource Info
+  <p align="center">Prometheus Datasource Info</p>
 </p>
 
+<br/>
 <br/>
 
 Last but not least, set up the Kafka Dashboard in Grafana.
@@ -223,9 +225,10 @@ http://localhost:3000/dashboard/import
 
 <p align="center">
   <img src="images/grafana-prometheus-datasource-step3.png"  alt="Grafana Setup Step 3"/>
-  Import the Kafka's Dashboard using the Upload JSON file button
+  <p align="center">Import the Kafka's Dashboard using the Upload JSON file button</p>
 </p>
 
+<br/>
 <br/>
 
 # Graylog
