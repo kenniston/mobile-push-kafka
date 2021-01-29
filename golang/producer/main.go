@@ -1,7 +1,10 @@
 package main
 
-import "github.com/kenniston/mobile-push-kafka/golang/producer/cmd"
+import (
+	_ "github.com/kenniston/mobile-push-kafka/golang/producer/server/controller"
+	"github.com/kenniston/mobile-push-kafka/golang/restserver"
+)
 
 func main() {
-	cmd.Execute()
+	microservice.Run()
 }
