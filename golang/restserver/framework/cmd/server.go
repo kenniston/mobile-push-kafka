@@ -33,6 +33,9 @@ func init() {
 	// Configure Server Commands
 	runCmd.Flags().StringP("server-port", "p", "4001", "Configure Server port")
 	runCmd.Flags().StringP("log-level", "l", "info", "Configure log level")
+	runCmd.Flags().BoolP("graylog", "g", false, "Enable Graylog")
+	runCmd.Flags().String("graylog-ip", "localhost", "Configure Graylog Server IP")
+	runCmd.Flags().Int32("graylog-port", 5555, "Configure Graylog Server port")
 
 	err := viper.GetViper().BindPFlags(runCmd.Flags())
 	if err != nil {

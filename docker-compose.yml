@@ -1,5 +1,10 @@
 version: '3.5'
 
+volumes:
+  graylog-mongo-data:
+  graylog-data:
+  graylog-elastic-data:
+
 networks:
   mobilepush:
 
@@ -70,6 +75,58 @@ services:
       - mobilepush
     depends_on:
       - prometheus
+  
+  mongo:
+    image: mongo:4.2
+    container_name: mongo
+    volumes:
+      - graylog-mongo-data:/data/db
+    networks:
+      - mobilepush
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.0
+    container_name: elasticsearch
+    volumes:
+      - graylog-elastic-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    environment:
+      http.host: 0.0.0.0
+      discovery.type: single-node
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    networks:
+      - mobilepush
+
+  graylog:
+    image: graylog/graylog:4.0.2
+    container_name: graylog
+    volumes:
+      - graylog-data:/usr/share/graylog/data
+    ports:
+      - 5555:5555/udp     # Syslog UDP
+      - 6666:6666/udp     # Syslog UDP
+      - 9000:9000         # Graylog web interface and REST API
+      - 12201:12201       # GELF TCP
+      - 12201:12201/udp   # GELF TCP
+      - 1514:1514         # Syslog TCP
+      - 1514:1514/udp     # Syslog UDP
+    restart: always
+    environment:
+      GRAYLOG_HTTP_EXTERNAL_URI: http://localhost:9000/
+      GRAYLOG_ROOT_PASSWORD_SHA2: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      GRAYLOG_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      GRAYLOG_ELASTICSEARCH_VERSION: 7
+    networks:
+      - mobilepush
+    depends_on:
+     - mongo
+     - elasticsearch
 
   # golang-sender:
   #   build:

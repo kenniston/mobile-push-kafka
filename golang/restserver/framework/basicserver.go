@@ -2,6 +2,7 @@ package framework
 
 import (
 	"fmt"
+	"github.com/gemnasium/logrus-graylog-hook/v3"
 	"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/logger"
@@ -45,6 +46,16 @@ func NewBasicServer(v *viper.Viper) BasicServer {
 	if logLevel == logrus.DebugLevel {
 		resty.SetLogger(logrus.New().Out)
 		resty.SetDebug(true)
+	}
+
+	// Configure Graylog
+	var useGraylog = v.GetBool("graylog")
+	var graylogIP = v.GetString("graylog-ip")
+	var graylogPort = v.GetInt32("graylog-port")
+	if useGraylog {
+		hook := graylog.NewGraylogHook(fmt.Sprintf("%s:%d", graylogIP, graylogPort), nil)
+		logrus.AddHook(hook)
+		logrus.Infof("Log messages are now sent to Graylog (udp://%s:%d)", graylogIP, graylogPort)
 	}
 
 	// Create Basic Server Instance
