@@ -4,6 +4,7 @@ volumes:
   graylog-mongo-data:
   graylog-data:
   graylog-elastic-data:
+  grafana-data:
 
 networks:
   mobilepush:
@@ -47,7 +48,7 @@ services:
     ports:
       - 19000:9000
     environment:
-      KAFKA_BROKERCONNECT: kafka:9092    
+      KAFKA_BROKERCONNECT: kafka:9092
     networks: 
       - mobilepush
     depends_on:
@@ -69,6 +70,8 @@ services:
   grafana:
     image: grafana/grafana:7.3.7
     container_name: grafana-service
+    volumes:
+      - grafana-data:/var/lib/grafana
     ports:
       - "3000:3000"
     networks:
@@ -83,6 +86,11 @@ services:
       - graylog-mongo-data:/data/db
     networks:
       - mobilepush
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+      interval: 60s
+      timeout: 10s
+      retries: 5
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.0
@@ -94,14 +102,19 @@ services:
     environment:
       http.host: 0.0.0.0
       discovery.type: single-node
-      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      ES_JAVA_OPTS: -Xms2048m -Xmx2048m
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    mem_limit: 1g
+    mem_limit: 2g
     networks:
       - mobilepush
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:9200"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
 
   graylog:
     image: graylog/graylog:4.0.2
@@ -109,24 +122,26 @@ services:
     volumes:
       - graylog-data:/usr/share/graylog/data
     ports:
-      - 5555:5555/udp     # Syslog UDP
-      - 6666:6666/udp     # Syslog UDP
+      - 5555:5555/udp     # GoLang Logger UDP
+      - 6666:6666/udp     # Java Logger UDP
       - 9000:9000         # Graylog web interface and REST API
       - 12201:12201       # GELF TCP
       - 12201:12201/udp   # GELF TCP
       - 1514:1514         # Syslog TCP
       - 1514:1514/udp     # Syslog UDP
-    restart: always
     environment:
       GRAYLOG_HTTP_EXTERNAL_URI: http://localhost:9000/
       GRAYLOG_ROOT_PASSWORD_SHA2: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
       GRAYLOG_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
       GRAYLOG_ELASTICSEARCH_VERSION: 7
+    restart: always
     networks:
       - mobilepush
     depends_on:
-     - mongo
-     - elasticsearch
+      mongo:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
 
   # golang-sender:
   #   build:

@@ -2,7 +2,7 @@
 
 This document describes the steps needed to build and run the Mobile Push Sender using Kafka.
 
-*Updated: 25 Jan 2021*
+*Updated: 30 Jan 2021*
 
 <br/>
 
@@ -29,6 +29,10 @@ Below are the hosts and ports for the all containers (docker on localhost):
 * Kafdrop - http://localhost:19000
 * Prometheus - http://localhost:9090
 * Grafana - http://localhost:3000
+* Graylog - http://localhost:9000
+
+*This project needs at least 4 GB of RAM. On MacOS, docker must have 4G RAM to run all the containers in this project.
+The ElasticSearch container can exit with code 137 if there is no RAM available.*
 
 <br/>
 
@@ -145,10 +149,42 @@ ENTRYPOINT ["/home/app/project-name", "run"]
 *The default port can change per project*
 
 ```
-./project-name run \
-    -p [PORT - Optional. Default 6001]
-    --log-level [Default: info - (debug, error, trace, info, warning, panic, fatal)]
+./project-name run
+    --server-port    [Default: 6001      - HTTP Server Port]
+    --log-level      [Default: info      - (debug, error, trace, info, warning, panic, fatal)]
+    --graylog        [Default: false     - Boolean]
+    --graylog-ip     [Default: localhots - Graylog Server IP or host name]
+    --graylog-port   [Default: 5555      - Integer]
+
 ```
+
+<br/>
+
+## Server Framework and Graylog Logrus Hook
+
+The Producer project uses a server framework to expose REST endpoints (**golang/restserver** directory).
+The server uses Iris Web Framework (https://github.com/kataras/iris/) to expose endpoints through project controllers.
+
+The Logrus Graylog Hook (https://github.com/gemnasium/logrus-graylog-hook) is used to send log message through Logrus to Graylog server. The Hook is configured on the server framework:
+
+```
+var useGraylog = v.GetBool("graylog")
+var graylogIP = v.GetString("graylog-ip")
+var graylogPort = v.GetInt32("graylog-port")
+if useGraylog {
+  hook := graylog.NewGraylogHook(fmt.Sprintf("%s:%d", graylogIP, graylogPort), nil)
+  logrus.AddHook(hook)
+  logrus.Infof("Log messages are now sent to Graylog (udp://%s:%d)", graylogIP, graylogPort)
+}
+```
+
+<br/>
+
+# Kotlin Projects
+
+## How to build the *Kotlin* project
+
+*Not implemented yet*
 
 <br/>
 
@@ -162,7 +198,18 @@ ENTRYPOINT ["/home/app/project-name", "run"]
 
 # Kafka
 
-*Not implemented yet*
+Kafka is the message broker for this project. Services communicate with each other through Kafka topics. The project uses two topics: the first one is used to send push messages through Firebase component; the second one is used to return the results from Firebase to the caller.
+
+<p align="center">
+  <img src="images/messageflow.png"  alt="Message Flow"/>
+  <p align="center">Message Flow</p>
+</p>
+
+The Kafka image for this project is based on **wurstmeister/kafka:2.13-2.7.0** which provides additional parameters for Kafka containers. In addition, the final image also contains the library responsible for sending the monitoring data to prometheus (Prometheus JMX Agent).
+
+With default setup the Kafka container starts with two topics: MobileSendPush and MobilePushResult. Each topic has 4 partition and 1 replica.
+
+The **Kafdrop** (http://localhost:19000) can be used to manager Kafka topics. Kafdrop provides a visual Dashboard that shows Kafka information (Cluster, Brokers and Topics) and provide a visual topic editor. New topic can be created using Kafdrop, avoiding the Kafka command line tool.
 
 <br/>
 
@@ -190,6 +237,10 @@ Use the following URL (docker on localhost) to configure the Prometheus Datasour
 <br/>
 
 http://localhost:3000/datasources/new?utm_source=grafana_gettingstarted
+
+*Default user:* ***admin***
+<br/>
+*Default password:* ***admin***
 
 <br/>
 
@@ -229,10 +280,47 @@ http://localhost:3000/dashboard/import
 </p>
 
 <br/>
+
+<p align="center">
+  <img src="images/grafana-kafka-dashboard.png"  alt="Grafana Kafka Dashboard"/>
+  <p align="center">Grafana - Kafka Dashboard</p>
+</p>
+
+<br/>
 <br/>
 
 # Graylog
 
-*Not implemented yet*
+This project provides a visual dashboard for logs using a Graylog container. Clients (Golang producer/consumer, Java producer/consumer and Kotlin producer/consumer) can uses GELF messages to send logs to the Graylog.
+
+To send log messages to Graylog a new Input must be configured. To create a new Input follow the steps below:
+
+<p align="center">
+  <img src="images/graylog-create-input-step1.png"  alt="Graylog Create Input Step 1"/>
+  <p align="center">Graylog Create Input - Step 1</p>
+</p>
+
+<br/>
+
+<p align="center">
+  <img src="images/graylog-create-input-step2.png"  alt="Graylog Select GELF UDP Step 2"/>
+  <p align="center">Select GELF UDP and click on <b>Launch new input</b> button - Step 2</p>
+</p>
+
+<br/>
+
+<p align="center">
+  <img src="images/graylog-create-input-step3.png"  alt="GELF UDP Input Information - Step 3"/>
+  <p align="center">Fill in the GELF UDP Input information (title and port are the most important) and click on <b>Save</b> button - Step 2</p>
+</p>
+
+<br/>
+
+With the input information (port and Graylog address) the clients can send log messages to the Graylog. Messages can be filtered on the **Graylog Search** tab.
+
+<p align="center">
+  <img src="images/graylogdashboard.png"  alt="Graylog Dashboard"/>
+  <p align="center">Graylog Dashboard - Logs</p>
+</p>
 
 <br/>
