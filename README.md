@@ -4,6 +4,29 @@ This document describes the steps needed to build and run the Mobile Push Sender
 
 *Updated: 30 Jan 2021*
 
+## Table of Contents
+
+- [Architecture](#Architecture)
+- [How to run the project](#How-to-run-the-project)
+- [Developer Environment](#Developer-Environment)
+- [GoLang Projects](#GoLang-Projects)
+  - [How to build the GoLang project](#How-to-build-the-GoLang-project)
+  - [How to optimize the executable size](#How-to-optimize-the-executable-size)
+  - [Build from Docker Container (GoLang Container)](#Build-from-Docker-Container-GoLang-Container)
+  - [Project Command Line](#Project-Command-Line)
+  - [Server Framework and Graylog Logrus Hook](#Server-Framework-and-Graylog-Logrus-Hook)
+- [Kotlin Projects](#Kotlin-Projects)
+  - [How to build the Kotlin project](#How-to-build-the-Kotlin-project)
+- [Java Projects](#Java-Projects)
+  - [How to build the Java project](#How-to-build-the-Java-project)
+- [Kafka](#Kafka)
+- [Prometheus](#Prometheus)
+  - [Prometheus Container](#Prometheus-Container)
+  - [Prometheus Architecture](#Prometheus-Architecture)
+- [Grafana](#Grafana)
+- [Graylog](#Graylog)
+
+
 <br/>
 
 ## Architecture
@@ -56,7 +79,7 @@ The ElasticSearch container can exit with code 137 if there is no RAM available.
 
 ## How to build the *GoLang* project
 
-```
+```sh
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -a \
     -o project-name \
@@ -76,25 +99,25 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 
 * Install UPX (Ultimate Packer for eXecutables - Compress/expand executable files)
     - MacOS X and Homebrew:
-        ```
+        ```sh
         brew install upx
         ```
     - Linux:
-        ```
+        ```sh
         apt-get install -y upx
         ```    
     -  Windows:
-        ```
+        ```sh
         choco install upx
         ```
     
 * Compress the server executable with UPX:
 
-    ```
+    ```sh
     upx --ultra-brute -v ./project-name && upx -t ./project-name
     ```    
     or
-    ```
+    ```sh
     upx -9 -v ./project-name && upx -t ./project-name
     ```    
 
@@ -104,7 +127,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 
 The **docker-composer.yml** file has the build section for all GoLang project. This section uses the Dockerfile below to generate the project's executable and optimize it using the upx tool.
 
-```
+```dockerfile
 FROM golang:1.15.7-alpine as builder
 
 RUN apk update && \
@@ -148,7 +171,7 @@ ENTRYPOINT ["/home/app/project-name", "run"]
 
 *The default port can change per project*
 
-```
+```shell
 ./project-name run
     --server-port    [Default: 6001      - HTTP Server Port]
     --log-level      [Default: info      - (debug, error, trace, info, warning, panic, fatal)]
@@ -167,7 +190,7 @@ The server uses Iris Web Framework (https://github.com/kataras/iris/) to expose 
 
 The Logrus Graylog Hook (https://github.com/gemnasium/logrus-graylog-hook) is used to send log message through Logrus to Graylog server. The Hook is configured on the server framework:
 
-```
+```go
 var useGraylog = v.GetBool("graylog")
 var graylogIP = v.GetString("graylog-ip")
 var graylogPort = v.GetInt32("graylog-port")

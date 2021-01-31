@@ -13,7 +13,7 @@ services:
   zookeeper:
     image: zookeeper:3.6.2
     container_name: zookeper-service
-    restart: always
+    restart: unless-stopped
     ports:
       - 2181:2181
     environment:
@@ -66,6 +66,8 @@ services:
       - mobilepush
     depends_on:
       - kafka
+      - node-exporter
+      - cadvisor
 
   grafana:
     image: grafana/grafana:7.3.7
@@ -134,7 +136,7 @@ services:
       GRAYLOG_ROOT_PASSWORD_SHA2: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
       GRAYLOG_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
       GRAYLOG_ELASTICSEARCH_VERSION: 7
-    restart: always
+    restart: unless-stopped
     networks:
       - mobilepush
     depends_on:
@@ -142,6 +144,33 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
+
+  node-exporter:
+    image: prom/node-exporter:v1.0.1
+    container_name: node_exporter
+    restart: unless-stopped
+    ports:
+      - 9100:9100
+    networks:
+      - mobilepush
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.38.7
+    container_name: cadvisor
+    privileged: true
+    devices:
+      - "/dev/kmsg:/dev/kmsg"
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - 8080:8080
+    networks:
+      - mobilepush
 
   # golang-sender:
   #   build:
