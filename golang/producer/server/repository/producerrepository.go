@@ -1,11 +1,15 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/kenniston/mobile-push-kafka/golang/producer/server/dto"
 	"github.com/kenniston/mobile-push-kafka/golang/restserver/framework"
+	"github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"time"
 )
 
 type ProducerRepository interface {
@@ -19,26 +23,42 @@ type ProducerRepository interface {
 //
 type producerRepository struct {
 	framework.BaseRepository
-	serverConfig *viper.Viper
+	conn *kafka.Conn
 }
 
 // Create and initialize the repository
 func NewSecurityRepository(config *viper.Viper) ProducerRepository {
-	return &producerRepository{serverConfig: config}
+	return &producerRepository{
+		BaseRepository: framework.NewBaseRepository("", "", "Producer Repository", config),
+	}
 }
 
 // Return a Security list object
 func (r *producerRepository) Send(message dto.PushMessage) error {
 	r.ChecksInitialized()
 
-	str, err := json.Marshal(message)
+	msg, err := json.Marshal(message)
 	if err != nil {
-		logrus.Error(err)
 		return err
 	}
-	logrus.Debug("Message: %s", string(str))
+	logrus.Debug("Message: %s", string(msg))
 
-	//TODO: Send message to the Kafka's topic
+	address := r.GetConfig().GetString("kafka-address")
+	topic := r.GetConfig().GetString("kafka-topic")
 
-	return nil
+	kafkaWriter :=  &kafka.Writer{
+		Addr:     kafka.TCP(address),
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
+	}
+	defer kafkaWriter.Close()
+
+	kakfaMsg := kafka.Message{
+		Key:   []byte(fmt.Sprintf("push-%d", time.Now().Unix())),
+		Value: msg,
+	}
+
+	err = kafkaWriter.WriteMessages(context.Background(), kakfaMsg)
+
+	return err
 }

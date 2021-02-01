@@ -3,7 +3,9 @@ package framework
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
+	"strings"
 )
 
 func printError(err error, level logrus.Level) {
@@ -26,6 +28,36 @@ func printError(err error, level logrus.Level) {
 }
 
 //===============================================================================
+// ValidationError is a structure used to parse error from converters
+//
+type ValidationError struct {
+	ActualTag string `json:"tag"`
+	Field string `json:"field"`
+	Kind      string `json:"kind"`
+	Type      string `json:"type"`
+	Value     string `json:"value"`
+	Param     string `json:"param"`
+}
+
+func WrapValidationErrors(errs interface{}) []ValidationError {
+	er := errs.(validator.ValidationErrors)
+	validationErrors := make([]ValidationError, 0, len(er))
+	for _, validationErr := range er {
+		ns := strings.Split(validationErr.Namespace(), ".")
+		field := strings.ToLower(ns[len(ns)-1])
+		validationErrors = append(validationErrors, ValidationError{
+			ActualTag: validationErr.ActualTag(),
+			Field:	   field,
+			Kind:      validationErr.Kind().String(),
+			Type:      validationErr.Type().String(),
+			Value:     fmt.Sprintf("%v", validationErr.Value()),
+			Param:     validationErr.Param(),
+		})
+	}
+	return validationErrors
+}
+
+//===============================================================================
 // IntegrationApiError is a structure API Integration Errors
 //
 type IntegrationApiError struct {
@@ -44,7 +76,7 @@ func (e *IntegrationApiError) Error() string {
 		body = "null"
 	}
 
-	return fmt.Sprintf("{ ErrorCode: %d, Description: \"%s\", StatusCode: %d, Body: %v, Error: %v}",
+	return fmt.Sprintf("ErrorCode: %d, Description: \"%s\", StatusCode: %d, Body: %v, Error: %v",
 		e.ErrorCode, e.Description, e.StatusCode, body, e.Err)
 }
 
@@ -65,12 +97,12 @@ type JsonParserError struct {
 }
 
 func (e *JsonParserError) Error() string {
-	return fmt.Sprintf("{ ErrorCode: %d, Description: %s, Error: %v}",
-		e.ErrorCode, e.Description, e.Err)
+	return fmt.Sprintf("ErrorCode: %d, Description: %s, Detail: %s, Error: %v",
+		e.ErrorCode, e.Description, e.Detail, e.Err)
 }
 
 func NewJsonParserError(detail string, err error, logLevel logrus.Level) *JsonParserError {
-	ex := &JsonParserError{-9998, "Error Parsing JSON.", detail, err}
+	ex := &JsonParserError{-9998, "Error Parsing JSON", detail, err}
 	printError(ex, logLevel)
 	return ex
 }
@@ -86,7 +118,7 @@ type RequiredError struct {
 }
 
 func (e *RequiredError) Error() string {
-	return fmt.Sprintf("{ ErrorCode: %d, Description: %s, Error: %v}",
+	return fmt.Sprintf("ErrorCode: %d, Description: %s, Error: %v",
 		e.ErrorCode, e.Description, e.Err)
 }
 

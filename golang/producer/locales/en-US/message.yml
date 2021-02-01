@@ -1,0 +1,2 @@
+message-parse-error: Invalid push message.
+message-send-error: Error sending message to broker.

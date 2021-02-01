@@ -1,5 +1,5 @@
 package dto
 
 type PushMessage struct {
-	Message string
+	Message string `json:"message" yaml:"message" validate:"required"`
 }

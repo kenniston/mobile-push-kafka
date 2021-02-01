@@ -3,6 +3,7 @@ package framework
 import (
 	"fmt"
 	"github.com/gemnasium/logrus-graylog-hook/v3"
+	"github.com/go-playground/validator/v10"
 	"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/logger"
@@ -10,6 +11,8 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/resty.v1"
 	"reflect"
+	"runtime"
+	"strings"
 )
 
 // Defines Basic Server Methods
@@ -37,12 +40,27 @@ func NewBasicServer(v *viper.Viper) BasicServer {
 	validateConfig(v)
 
 	// Configure Logs
+	logrus.SetReportCaller(true)
 	var logLevel logrus.Level
 	logLevel, err := logrus.ParseLevel(v.GetString("log-level"))
 	if err != nil {
 		logLevel = logrus.InfoLevel
 	}
 	logrus.SetLevel(logLevel)
+	logrus.SetFormatter(&logrus.TextFormatter{
+		TimestampFormat: "02-01-2006 15:04:05",
+		FullTimestamp: true,
+		DisableLevelTruncation: true,
+		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
+			functionArr := strings.Split(f.Function, "/")
+			function := fmt.Sprintf("(func: %s) -", functionArr[len(functionArr)-1])
+
+			fileArr := strings.Split(f.File, "/")
+			file := fmt.Sprintf(" %s:%d", fileArr[len(fileArr)-1], f.Line)
+
+			return function, file
+		},
+	})
 	if logLevel == logrus.DebugLevel {
 		resty.SetLogger(logrus.New().Out)
 		resty.SetDebug(true)
@@ -63,7 +81,10 @@ func NewBasicServer(v *viper.Viper) BasicServer {
 	server.config = v
 
 	// Create Iris Server to serve
-	server.app = iris.New()
+	server.app = iris.New().Configure(iris.WithConfiguration(iris.Configuration{DisableBodyConsumptionOnUnmarshal: true}))
+
+	// Validator for Iris requests
+	server.app.Validator = validator.New()
 
 	// Configure Logrus Middleware
 	if logLevel == logrus.DebugLevel {
