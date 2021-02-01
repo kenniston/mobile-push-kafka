@@ -34,11 +34,8 @@ services:
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_HOST_NAME: kafka
-      KAFKA_CONNECT_REST_PORT: 8082
       KAFKA_LISTENERS: PLAINTEXT://:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_CONNECT_REST_ADVERTISED_HOST_NAME: localhost
-      KAFKA_CONNECT_BOOTSTRAP_SERVERS: localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.0.20:9092
       KAFKA_CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       KAFKA_CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       KAFKA_CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 0
@@ -60,7 +57,7 @@ services:
     ports:
       - 19000:9000
     environment:
-      KAFKA_BROKERCONNECT: kafka:9092
+      KAFKA_BROKERCONNECT: 192.168.0.20:9092
     networks: 
       - mobilepush
     depends_on:
