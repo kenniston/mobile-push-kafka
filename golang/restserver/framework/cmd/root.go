@@ -14,6 +14,10 @@ var rootCmd = &cobra.Command{
 	Short: FormattedMessage(),
 }
 
+func GetRootCommand() *cobra.Command {
+	return rootCmd
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
 }
