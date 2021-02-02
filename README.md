@@ -50,6 +50,12 @@ This document describes the steps needed to build and run the Mobile Push Sender
 
 All docker images can be created by docker-compose. To start all containers, use the ***docker-compose up*** command. This command will build all the necessary images and create the containers. 
 
+> ***Add the following line in hosts file***
+> ```
+> 127.0.0.1   kafka
+> ```
+
+
 Below are the hosts and ports for the all containers (docker on localhost):
 
 * ZooKeeper - http://localhost:2181
