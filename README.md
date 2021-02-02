@@ -1,8 +1,10 @@
 # **Mobile Push with Kafka**
 
+The objective of this project is to demonstrate the use of queues to integrate services of a system, avoiding the strong coupling between them. As an example, an integration with Firebase will be used to send push messages to an Android application. 
+
 This document describes the steps needed to build and run the Mobile Push Sender using Kafka.
 
-*Updated: 30 Jan 2021*
+*Updated: 02 Fev 2021*
 
 ## Table of Contents
 
@@ -10,6 +12,9 @@ This document describes the steps needed to build and run the Mobile Push Sender
 - [How to run the project](#How-to-run-the-project)
 - [Developer Environment](#Developer-Environment)
 - [GoLang Projects](#GoLang-Projects)
+  - [Prerequisites](#Prerequisites)
+    - [Linux Dependencies](#Linux-Dependencies)
+    - [macOS X Dependencies](#macOS-X-Dependencies)
   - [How to build the GoLang project](#How-to-build-the-GoLang-project)
   - [How to optimize the executable size](#How-to-optimize-the-executable-size)
   - [Build from Docker Container (GoLang Container)](#Build-from-Docker-Container-GoLang-Container)
@@ -76,6 +81,20 @@ The ElasticSearch container can exit with code 137 if there is no RAM available.
 # GoLang Projects
 
 ***project-name = Procuder or Consumer***
+
+## Prerequisites
+
+### Linux Dependencies
+* Ubuntu / Debian: sudo apt-get install golang gcc libgl1-mesa-dev xorg-dev
+* Fedora: sudo dnf install golang gcc libXcursor-devel libXrandr-devel mesa-libGL-devel libXi-devel libXinerama-devel libXxf86vm-devel
+* Solus: sudo eopkg it -c system.devel golang mesalib-devel libxrandr-devel libxcursor-devel libxi-devel libxinerama-devel
+* Arch Linux: sudo pacman -S go xorg-server-devel
+* Void Linux: sudo xbps-install -S go base-devel xorg-server-devel libXrandr-devel libXcursor-devel libXinerama-devel
+
+### macOS X Dependencies
+
+* Install Xcode from the Mac App Store
+* Set up the Xcode command line tools by opening a Terminal window and typing the following: xcode-select --install
 
 ## How to build the *GoLang* project
 
@@ -169,6 +188,8 @@ ENTRYPOINT ["/home/app/project-name", "run"]
 
 ## Project Command Line
 
+#### HTTP Server
+
 *The default port can change per project*
 
 ```shell
@@ -179,6 +200,12 @@ ENTRYPOINT ["/home/app/project-name", "run"]
     --graylog-ip     [Default: localhots - Graylog Server IP or host name]
     --graylog-port   [Default: 5555      - Integer]
 
+```
+
+#### Desktop Application
+
+```shell
+./project-name desktop
 ```
 
 <br/>

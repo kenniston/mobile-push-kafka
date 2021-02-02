@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	fyne.io/fyne/v2 v2.0.0
-	github.com/go-gl/glfw v0.0.0-20201108214237-06ea97f0c265 // indirect
 	github.com/kataras/i18n v0.0.6
 	github.com/kataras/iris/v12 v12.2.0-alpha2
 	github.com/kenniston/mobile-push-kafka/golang/restserver v0.0.0-00010101000000-000000000000
