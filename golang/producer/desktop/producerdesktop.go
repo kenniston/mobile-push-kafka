@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/kataras/i18n"
 	"github.com/kenniston/mobile-push-kafka/golang/producer/server/dto"
+	"github.com/kenniston/mobile-push-kafka/golang/restserver/framework"
 	"github.com/kenniston/mobile-push-kafka/golang/restserver/framework/cmd"
 	"github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
@@ -89,6 +90,8 @@ func window() {
 }
 
 func sendKafkaMessage(message string, server string, topic string) error {
+	defer framework.TimeTrack(time.Now())
+
 	pushMsg := dto.PushMessage{
 		Message: message,
 	}
@@ -97,8 +100,22 @@ func sendKafkaMessage(message string, server string, topic string) error {
 		Addr:     kafka.TCP(server),
 		Topic:    topic,
 		Balancer: &kafka.LeastBytes{},
+		RequiredAcks: 1,
+		Async: true,
+		Completion: func(messages []kafka.Message, err error) {
+			if err != nil {
+				logrus.Errorf("Error sending message to Kafka server: %v", err)
+				return
+			}
+			for m := range messages {
+				logrus.Debugf("Message sent to Kafka server: %v", m)
+			}
+		},
 	}
-	defer kafkaWriter.Close()
+	defer func() {
+		err := kafkaWriter.Close()
+		logrus.Errorf("Error closing Kafka connection: %v", err)
+	}()
 
 	msg, err := json.Marshal(pushMsg)
 	if err != nil {
@@ -106,11 +123,12 @@ func sendKafkaMessage(message string, server string, topic string) error {
 	}
 	logrus.Debug("Message: %s", string(msg))
 
-	kakfaMsg := kafka.Message{
+	kafkaMsg := kafka.Message{
 		Key:   []byte(fmt.Sprintf("push-%d", time.Now().Unix())),
 		Value: msg,
 	}
-	e := kafkaWriter.WriteMessages(context.Background(), kakfaMsg)
+	e := kafkaWriter.WriteMessages(context.Background(), kafkaMsg)
+
 	return e
 }
 

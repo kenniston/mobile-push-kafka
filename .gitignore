@@ -7,9 +7,6 @@
 *.dll
 *.so
 *.dylib
-main
-main.exe
-mobilepushsender
 
 # Test binary, build with `go test -c`
 *.test
