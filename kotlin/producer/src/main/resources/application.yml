@@ -1,0 +1,12 @@
+server:
+  port: ${PRODUCER_PORT:4002}
+
+spring:
+  kafka:
+    producer:
+      bootstrap-servers: ${PRODUCER_KAFKA_SERVER:localhost:9092}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+push:
+  topic: ${PRODUCER_TOPIC:""}

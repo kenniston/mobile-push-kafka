@@ -1,2 +1,3 @@
 message-parse-error: Invalid push message.
 message-send-error: Error sending message to broker.
+message-kafka-close-error: Error closing Kafka connection.
