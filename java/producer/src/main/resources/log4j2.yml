@@ -1,0 +1,26 @@
+Configuration:
+  name: Default
+  status: error
+
+  Appenders:
+    Gelf:
+      - name: graylog
+        Host: localhost
+        Port: 7777
+        OriginHost: java_push_producer
+        ExtractStackTrace: true
+        FilterStackTrace: true
+        MaximumMessageSize: 8192
+
+    Console:
+      - name: console
+        PatternLayout:
+          alwaysWriteExceptions: true
+          pattern: "%clr{%d{yyyy-MM-dd HH:mm:ss.SSS}}{faint} %clr{%5p} %clr{%pid}{magenta} %clr{---}{faint} %clr{[%15.15t]}{faint} %clr{%-40.40c{1.}}{cyan} %clr{:}{faint} %m%n%xwEx"
+
+  Loggers:
+    Root:
+      level: info
+      AppenderRef:
+        - ref: console
+        - ref: graylog

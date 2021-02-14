@@ -132,7 +132,10 @@ services:
       - graylog-data:/usr/share/graylog/data
     ports:
       - 5555:5555/udp     # GoLang Logger UDP
-      - 6666:6666/udp     # Java Logger UDP
+      - 6666:6666/udp     # Kotlin Logger UDP
+      - 7777:7777/udp     # Java Logger UDP
+      - 8888:8888/udp     # Reserved Logger UDP
+      - 9999:9999/udp     # Reserved Logger UDP
       - 9000:9000         # Graylog web interface and REST API
       - 12201:12201       # GELF TCP
       - 12201:12201/udp   # GELF TCP
@@ -179,16 +182,16 @@ services:
   #   networks:
   #     - mobilepush
 
-  # golang-sender:
+  # golang-producer:
   #   build:
   #     context: ./golang
   #     dockerfile: Dockerfile
-  #   image: golang-sender:latest
-  #   container_name: golang-sender-service
+  #   image: golang-producer:latest
+  #   container_name: golang-producer-service
   #   stdin_open: true
   #   tty: true
   #   ports:
-  #     - "6001:6001"
+  #     - "4001:4001"
   #   environment:
   #     - SRV_LOG_LEVEL=debug
   #   restart: on-failure:3
