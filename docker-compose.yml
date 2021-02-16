@@ -134,7 +134,8 @@ services:
       - 5555:5555/udp     # GoLang Logger UDP
       - 6666:6666/udp     # Kotlin Logger UDP
       - 7777:7777/udp     # Java Logger UDP
-      - 8888:8888/udp     # Reserved Logger UDP
+      - 8888:8888         # Rust Logger TCP
+      - 8888:8888/udp     # Rust Logger UDP
       - 9999:9999/udp     # Reserved Logger UDP
       - 9000:9000         # Graylog web interface and REST API
       - 12201:12201       # GELF TCP
