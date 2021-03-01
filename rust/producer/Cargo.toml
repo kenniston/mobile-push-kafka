@@ -8,6 +8,8 @@ edition = "2018"
 
 [profile.release]
 lto = true
+debug = false
+opt-level = 3
 
 [dependencies]
 clap = "2.33.3"
@@ -17,4 +19,7 @@ gelf = "0.5.0"
 log = "0.4.14"
 log4rs = "0.8.3"
 log4rs-gelf = "0.1.4"
+serde = { version = "1.0.123", features = ["derive"] }
 serde_gelf = "0.1.6"
+serde_json = "1.0.64"
+json = "0.12.4"

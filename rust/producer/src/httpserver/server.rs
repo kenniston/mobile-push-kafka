@@ -1,4 +1,4 @@
-use actix_web::{get, middleware::Logger, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{middleware::Logger, App, HttpServer};
 use clap::{Arg, App as Clap, ArgMatches};
 use std::str::FromStr;
 use env_logger::Env;
@@ -9,9 +9,10 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     config::{Appender, Config, Root}
 };
+use crate::httpserver::route;
 
 // Server
-pub(crate) struct Server {}
+pub struct Server {}
 
 impl Server {
 
@@ -34,11 +35,12 @@ impl Server {
         HttpServer::new(|| {
             App::new()
                 .wrap(Logger::default())
-                .service(health)
+                .service(route::health)
+                .service(route::send)
         })
-            .bind(("0.0.0.0", port))?
-            .run()
-            .await
+        .bind(("0.0.0.0", port))?
+        .run()
+        .await
     }
 
     fn config_args(&self) -> ArgMatches<'static> {
@@ -121,10 +123,4 @@ impl Server {
         let _handle = log4rs::init_config(config);
     }
 
-}
-
-// Default Health Check endpoint for the server.
-#[get("/health")]
-async fn health(_req: HttpRequest) -> HttpResponse {
-    HttpResponse::Ok().body("{\n  \"message\": \"The producer service is working properly.\"\n}")
 }

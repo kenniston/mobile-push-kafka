@@ -1,6 +1,5 @@
-mod server;
-use crate::server::Server;
+mod httpserver;
 
 fn main() -> std::io::Result<()> {
-    Server::run()
+    httpserver::server::Server::run()
 }
