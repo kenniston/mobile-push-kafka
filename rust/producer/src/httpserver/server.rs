@@ -1,4 +1,4 @@
-use actix_web::{middleware::Logger, App, HttpServer};
+use actix_web::{web, middleware::Logger, App, HttpServer, HttpRequest};
 use clap::{Arg, App as Clap, ArgMatches};
 use std::str::FromStr;
 use env_logger::Env;
@@ -9,7 +9,7 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     config::{Appender, Config, Root}
 };
-use crate::httpserver::controller;
+use crate::httpserver::controller::{Controller, Push};
 
 // Server
 pub struct Server {}
@@ -21,6 +21,11 @@ impl Server {
         let server = Server{};
         // Configure server arguments
         let matches = server.config_args();
+
+        // Configure server routes
+        let kafka_server = matches.value_of("kafka-server").unwrap().to_string();
+        let kafka_topic = matches.value_of("kafka-topic").unwrap().to_string();
+        let controller = Controller::default(kafka_server, kafka_topic);
 
         // Configure Graylog
         server.logger_config(&matches);
@@ -35,8 +40,8 @@ impl Server {
         HttpServer::new(|| {
             App::new()
                 .wrap(Logger::default())
-                .service(controller::health)
-                .service(controller::send)
+                .route("/health", web::get().to(|req: HttpRequest| { controller.health(req) }))
+                .route("/v1/push/send", web::get().to(|message: web::Json<Push>| { controller.send(message) }))
         })
         .bind(("0.0.0.0", port))?
         .run()
