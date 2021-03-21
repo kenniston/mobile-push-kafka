@@ -23,3 +23,4 @@ serde = { version = "1.0.123", features = ["derive"] }
 serde_gelf = "0.1.6"
 serde_json = "1.0.64"
 json = "0.12.4"
+rdkafka = "0.26.0"

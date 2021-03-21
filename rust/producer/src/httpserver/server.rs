@@ -9,7 +9,7 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     config::{Appender, Config, Root}
 };
-use crate::httpserver::route;
+use crate::httpserver::controller;
 
 // Server
 pub struct Server {}
@@ -35,8 +35,8 @@ impl Server {
         HttpServer::new(|| {
             App::new()
                 .wrap(Logger::default())
-                .service(route::health)
-                .service(route::send)
+                .service(controller::health)
+                .service(controller::send)
         })
         .bind(("0.0.0.0", port))?
         .run()
@@ -80,6 +80,18 @@ impl Server {
                 .default_value("8888")
                 .env("RS_GRAYLOG_PORT")
                 .help("Graylog server port (TCP).")
+            )
+            .arg(Arg::with_name("kafka-server")
+                .short("k")
+                .default_value("localhost:9092")
+                .env("RS_KAFKA_SERVER")
+                .help("Kafka server address.")
+            )
+            .arg(Arg::with_name("kafka-topic")
+                .short("m")
+                .default_value("MobileSendPush")
+                .env("RS_KAFKA_TOPIC")
+                .help("Kafka topic name.")
             )
             .get_matches()
     }
